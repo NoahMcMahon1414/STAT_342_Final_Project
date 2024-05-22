@@ -15,7 +15,7 @@ library(tidyverse)
 library(janitor)
 ```
 
-\textbf{Creating the Dataset}
+### Creating the Dataset
 
 ```{r Creating the Dataset}
 
@@ -24,3 +24,55 @@ cov <- tibble("Group" = c("BNT162b2", "Placebo", "Total"),
               "No. of Subjects" = c(17411, 17511, 34922))
 
 ```
+
+### Checking Values from Paper
+
+We know that P(COVID | BNT162b2) = $\pi_v$, and that P(COVID | Placebo) = $\pi_p$.
+
+```{r pi_v and pi_p}
+
+pi_v <- (8 / 17411)
+pi_p <- (162 / 17511)
+
+```
+
+Looking at $T \sim Binom(n = 170, \pi)$, we know that $\pi = \frac{\pi_v}{\pi_v + \pi_p}$ from the instructions.
+Additionally, the vaccine efficacy $\psi = \frac{1 - 2\pi}{1 - \pi}$.
+
+```{r pi and psi}
+
+pi <- (pi_v) / (pi_v + pi_p)
+psi <- (1 - (2 * pi)) / (1 - pi)
+
+```
+
+### Maximum Likelihood Estimator
+
+We know that $T \sim Binom(n = 170, \pi)$ and that we have observed t = 8. Additionally, the parameter of interest is the vaccine efficacy $\psi = \frac{1 - 2\pi}{1 - \pi}$.
+
+Using the Invariance of the MLE (which we proved in Problem 6), we can say that
+\begin{center}
+$\hat{\psi_0}^{MLE} = \frac{1 - 2\hat{\pi_0}^{MLE}}{1 - \hat{\pi_0}^{MLE}}$
+\end{center}
+
+### Method of Moments Estimator
+
+We know that $T \sim Binom(n = 170, \pi)$ and that we have observed t = 8. Additionally, the parameter of interest is the vaccine efficacy $\psi = \frac{1 - 2\pi}{1 - \pi}$. We know that $\pi = \frac{1 - \psi}{2 - \psi}$.
+
+The method of moments estimator satisfies
+\begin{align}
+E[T] &= \bar{t} \\
+170 * \pi &= \frac{8}{1} \\
+170 * \frac{1 - \psi}{2 - \psi} &= 8 \\
+\frac{1 - \psi}{2 - \psi} &= \frac{8}{170} \\
+1 - \psi &= \frac{16}{170} - \frac{8}{170}\psi \\
+\frac{154}{170} &= \frac{162}{170}\psi \\
+154 &= 170\psi \\
+\hat{\psi_0}^{MOM} &= \frac{154}{170}
+\end{align}
+
+We must now verify that $\hat{\psi_0}^{MOM} = \frac{n - 2T}{n + T}$.
+\begin{align}
+\hat{\psi_0}^{MOM} &= \frac{n - 2T}{n + T} \\
+&= \frac{170 - 2T}{170 + T}
+\end{align}
