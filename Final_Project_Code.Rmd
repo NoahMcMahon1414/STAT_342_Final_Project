@@ -1,0 +1,26 @@
+---
+title: "Final Project Code"
+subtitle:  "Cheeson Lau, Edison Lu, and Noah McMahon"
+graphics: yes
+output: pdf_document
+header-includes:
+    - \usepackage{amsmath, amssymb}
+    - \usepackage{framed}\definecolor{shadecolor}{rgb}{0.949,0.949,0.949}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+```
+
+\textbf{Creating the Dataset}
+
+```{r Creating the Dataset}
+
+cov <- tibble("Group" = c("BNT162b2", "Placebo", "Total"), 
+              "COVID-19 Cases" = c(8, 162, 170), 
+              "No. of Subjects" = c(17411, 17511, 34922))
+
+```
