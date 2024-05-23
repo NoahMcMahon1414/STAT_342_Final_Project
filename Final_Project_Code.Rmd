@@ -67,12 +67,51 @@ E[T] &= \bar{t} \\
 \frac{1 - \psi}{2 - \psi} &= \frac{8}{170} \\
 1 - \psi &= \frac{16}{170} - \frac{8}{170}\psi \\
 \frac{154}{170} &= \frac{162}{170}\psi \\
-154 &= 170\psi \\
-\hat{\psi_0}^{MOM} &= \frac{154}{170}
+154 &= 162\psi \\
+\hat{\psi_0}^{MOM} &= \frac{154}{162}
 \end{align}
 
-We must now verify that $\hat{\psi_0}^{MOM} = \frac{n - 2T}{n + T}$.
+We must now verify that $\hat{\psi_0}^{MOM} = \frac{n - 2T}{n - T}$.
 \begin{align}
-\hat{\psi_0}^{MOM} &= \frac{n - 2T}{n + T} \\
-&= \frac{170 - 2T}{170 + T}
+E[T] &= \bar{t} \\
+n * \pi &= t \\
+n * \frac{1 - \psi}{2 - \psi} &= t \\
+\frac{n - n\psi}{2 - \psi} &= t \\
+n - n\psi &= 2t - t\psi \\
+n - 2t &= n\psi + t\psi \\
+\psi(n + t) &= n - 2t \\
+\psi &= \frac{n - 2t}{n + t}
 \end{align}
+
+Now that we have verified that $\hat{\psi_0}^{MOM} = \frac{n - 2T}{n - T}$, we can use the parametric bootstrap to find a confidence interval for $\hat{\psi_0}^{MOM}$ since we know the distribution is Binomial.
+
+```{r Parametric Bootstrap CI MOM}
+
+pi_mom_der <- (154/162)
+
+B = 1000
+set.seed(8383)
+boot_df <- tibble(
+  psi_star = replicate(n = B,
+                       expr = ((170 - (2 * rbinom(n = 15, size = 170, prob = pi_mom_der))) / (170 - rbinom(n = 15, size = 170, prob = pi_mom_der))) )
+)
+
+ggplot(data = boot_df,
+       mapping = aes(x = psi_star) ) +
+  geom_histogram(binwidth = 0.3) +
+  labs(title = "Bootstrapped Sampling Distribution of ",
+       subtitle = expression(hat(psi)[0]^{MOM} == frac((n - (2 * T)),(n - T))),
+       x = expression(frac((n - (2 * T)),(n - T))),
+       y = "Count")
+
+boot_df %>% summarise(boot_mean = mean(psi_star), boot_sd = sd(psi_star))
+
+boot_mean <- mean(boot_df$psi_star)
+boot_sd <- sd(boot_df$psi_star)
+
+lower_mom <- boot_mean - (1.96 * boot_sd)
+upper_mom <- boot_mean + (1.96 * boot_sd)
+
+```
+
+Thus, the 95\% confidence interval for $\hat{\psi_0}^{MOM}$, achieved through parametric bootstrapping, is [`r round(lower_mom, 4)`, `r round(upper_mom, 4)`].
