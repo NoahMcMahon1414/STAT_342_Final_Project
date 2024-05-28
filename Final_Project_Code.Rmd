@@ -60,58 +60,69 @@ $\hat{\psi_0}^{MLE} = \frac{1 - 2\hat{\pi_0}^{MLE}}{1 - \hat{\pi_0}^{MLE}}$
 We know that $T \sim Binom(n = 170, \pi)$ and that we have observed t = 8. Additionally, the parameter of interest is the vaccine efficacy $\psi = \frac{1 - 2\pi}{1 - \pi}$. We know that $\pi = \frac{1 - \psi}{2 - \psi}$.
 
 The method of moments estimator satisfies
-\begin{align}
+\begin{align*}
 E[T] &= \bar{t} \\
-170 * \pi &= \frac{8}{1} \\
+170 * \pi &= 8 \\
 170 * \frac{1 - \psi}{2 - \psi} &= 8 \\
 \frac{1 - \psi}{2 - \psi} &= \frac{8}{170} \\
 1 - \psi &= \frac{16}{170} - \frac{8}{170}\psi \\
 \frac{154}{170} &= \frac{162}{170}\psi \\
 154 &= 162\psi \\
 \hat{\psi_0}^{MOM} &= \frac{154}{162}
-\end{align}
+\end{align*}
 
 We must now verify that $\hat{\psi_0}^{MOM} = \frac{n - 2T}{n - T}$.
-\begin{align}
+\begin{align*}
 E[T] &= \bar{t} \\
 n * \pi &= t \\
 n * \frac{1 - \psi}{2 - \psi} &= t \\
 \frac{n - n\psi}{2 - \psi} &= t \\
 n - n\psi &= 2t - t\psi \\
-n - 2t &= n\psi + t\psi \\
-\psi(n + t) &= n - 2t \\
-\psi &= \frac{n - 2t}{n + t}
-\end{align}
+n - 2t &= n\psi - t\psi \\
+\psi(n - t) &= n - 2t \\
+\psi &= \frac{n - 2t}{n - t}\\
+\end{align*}
+
+From above, we can also see that
+\begin{align*}
+\hat{\pi_0}^{MOM} = \frac{t}{n} = \frac{8}{170}
+\end{align*}
 
 Now that we have verified that $\hat{\psi_0}^{MOM} = \frac{n - 2T}{n - T}$, we can use the parametric bootstrap to find a confidence interval for $\hat{\psi_0}^{MOM}$ since we know the distribution is Binomial.
 
 ```{r Parametric Bootstrap CI MOM}
+pi_mom <- 8/170
 
-pi_mom_der <- (154/162)
-
+#generate sample of n = 15 from Binom(170, 8) and then calculate new estimate of psi_mom. Repeat 1000 times
 B = 1000
 set.seed(8383)
 boot_df <- tibble(
   psi_star = replicate(n = B,
-                       expr = ((170 - (2 * rbinom(n = 15, size = 170, prob = pi_mom_der))) / (170 - rbinom(n = 15, size = 170, prob = pi_mom_der))) )
+                       {sample <- rbinom(n = 15, size = 170, prob = pi_mom)
+                        sample_mean <- mean(sample)
+                        (170 - 2 * sample_mean) / (170 - sample_mean)})
 )
 
+#make a histogram of the bootstrap estimates
 ggplot(data = boot_df,
        mapping = aes(x = psi_star) ) +
-  geom_histogram(binwidth = 0.3) +
+  geom_histogram(bins = 10) +
   labs(title = "Bootstrapped Sampling Distribution of ",
-       subtitle = expression(hat(psi)[0]^{MOM} == frac((n - (2 * T)),(n - T))),
-       x = expression(frac((n - (2 * T)),(n - T))),
+       subtitle = expression(hat(psi)[0]^{MOM} == frac(n - 2 * T,n - T)),
+       x = expression(hat(psi)[0]^{MOM}),
        y = "Count")
+
 
 boot_df %>% summarise(boot_mean = mean(psi_star), boot_sd = sd(psi_star))
 
 boot_mean <- mean(boot_df$psi_star)
 boot_sd <- sd(boot_df$psi_star)
 
-lower_mom <- boot_mean - (1.96 * boot_sd)
-upper_mom <- boot_mean + (1.96 * boot_sd)
+lower_mom <- boot_mean - (qnorm(0.975) * boot_sd)
+upper_mom <- boot_mean + (qnorm(0.975) * boot_sd)
 
+lower_mom
+upper_mom
 ```
 
-Thus, the 95\% confidence interval for $\hat{\psi_0}^{MOM}$, achieved through parametric bootstrapping, is [`r round(lower_mom, 4)`, `r round(upper_mom, 4)`].
+Thus, the 95% confidence interval for $\hat{\psi_0}^{MOM}$, achieved through parametric bootstrapping, is [`r round(lower_mom, 4)`, `r round(upper_mom, 4)`].
