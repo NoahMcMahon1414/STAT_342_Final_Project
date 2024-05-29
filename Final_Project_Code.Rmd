@@ -92,6 +92,7 @@ Now that we have verified that $\hat{\psi_0}^{MOM} = \frac{n - 2T}{n - T}$, we c
 
 ```{r Parametric Bootstrap CI MOM}
 pi_mom <- 8/170
+psi_mom <- 154/162
 
 #generate sample of n = 15 from Binom(170, 8) and then calculate new estimate of psi_mom. Repeat 1000 times
 B = 1000
@@ -112,17 +113,19 @@ ggplot(data = boot_df,
        x = expression(hat(psi)[0]^{MOM}),
        y = "Count")
 
-
-boot_df %>% summarise(boot_mean = mean(psi_star), boot_sd = sd(psi_star))
-
 boot_mean <- mean(boot_df$psi_star)
-boot_sd <- sd(boot_df$psi_star)
+boot_se <- sd(boot_df$psi_star)
+bias <- boot_mean - psi_mom
+bias_corrected_estimate <- psi_mom - bias
+lower_mom <- bias_corrected_estimate - qnorm(0.975) * boot_se
+upper_mom <- bias_corrected_estimate + qnorm(0.975) * boot_se
 
-lower_mom <- boot_mean - (qnorm(0.975) * boot_sd)
-upper_mom <- boot_mean + (qnorm(0.975) * boot_sd)
-
-lower_mom
-upper_mom
+boot_df %>% summarise(boot_mean = round(boot_mean, 6), 
+                      boot_se = round(boot_se, 6),
+                      bias = round(bias, 10),
+                      bias_corrected_estimate = round(bias_corrected_estimate, 6),
+                      lower = round(lower_mom, 4), 
+                      upper = round(upper_mom, 4))
 ```
 
 Thus, the 95% confidence interval for $\hat{\psi_0}^{MOM}$, achieved through parametric bootstrapping, is [`r round(lower_mom, 4)`, `r round(upper_mom, 4)`].
