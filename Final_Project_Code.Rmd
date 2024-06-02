@@ -129,3 +129,41 @@ boot_df %>% summarise(boot_mean = round(boot_mean, 6),
 ```
 
 Thus, the 95% confidence interval for $\hat{\psi_0}^{MOM}$, achieved through parametric bootstrapping, is [`r round(lower_mom, 4)`, `r round(upper_mom, 4)`].
+
+### Empirical P-value MOM
+
+It is complied to figure out the sampling distribution, so we can find the p-value by using simulation.
+
+So suppose $T \sim Binom(n = 170, \pi_0 = \frac{1 - \psi_0}{2 - \psi_0})$. We wish to test $H_0: \psi_0 = 0.3$ vs. $H_1: \psi_0 > 0.3$. Set $\alpha = 0.01$. When $\psi_0 = 0.3$, $\pi_0 = \frac{1 - 0.3}{2-0.3} = 0.4118$. Our observed $t^{obs} = 8$.
+
+We decide to use $T$ itself as the test statistic. Note that $E[T] = n\pi_0 = n \cdot \frac{1 - \psi_0}{2 - \psi_0}$. Assuming that the vaccine does not make a patient more prone to COVID-19, the range of $\psi_0$ is [0, 1]. Within this range, $\pi_0$ decreases when $\psi_0$ increases. Therefore, small values of $T$ gives evidence against the null hypothesis and support the alternative hypothesis more.
+
+To calculate our empiricial P-value, we first have to generate $B$ samples $t^{*}$ from $Binom(n = 170, \pi_0 = 0.4118)$. Let $B = 10000$.
+
+```{r}
+#Simulate T* ~ Binom(n = 170, prob = 0.4118) 10000 times
+B = 10000
+set.seed(8383)
+
+null_sim <- tibble(
+  tstar = replicate(n = B, expr = rbinom(n = 1, size = 170, prob = 0.4118))
+)
+
+#Graph the null sampling distribution of T
+ggplot(data = null_sim, mapping = aes(x = tstar)) +
+  geom_histogram() +
+  geom_vline(xintercept = 8) +
+  labs(x = expression(paste(t, "*")),
+       title = "Sampling distribution of T under the null hypothesis",
+       subtitle = "vertical line at observed value") +
+  theme(plot.title = element_text(size = 20),
+        plot.subtitle = element_text(size = 20),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 20))
+
+#Calculate the empirical P-value if we observe t = 8
+obs_t = 8
+pval <- sum(null_sim$tstar <= obs_t)/B
+```
+
+Our empirical P-value is `r round(pval, 4)`, which is below $\alpha = 0.01$. Therefore, we can reject $H_0: \psi = 0.3$ and favour $H_1: \psi_0 > 0.3$. The FDA is highly likely to approve the vaccine.
